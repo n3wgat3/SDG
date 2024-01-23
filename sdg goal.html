@@ -1,0 +1,227 @@
+-<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #c6f1b5;
+        }
+
+        header {
+            text-align: center;
+            padding: 20px;
+            background-color: #000000;
+            color: #6cdd6e;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #9e93ff;
+            color: #000000;
+            border: none;
+            border-radius: 3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #000000;
+            padding: 8px;
+            text-align: left;
+        }
+
+        p {
+            font-weight: bold;
+        }
+
+        select {
+            padding: 8px;
+        }
+    </style>
+    <title>Life on land</title>
+</head>
+<body>
+
+    <header>
+        <h1>Biodiversity Tracker</h1>
+    </header>
+
+    <div class="container">
+        <form id="observationForm">
+            <label for="species">Species:</label>
+            <input type="text" id="species" required>
+            <label for="location">Location:</label>
+            <input type="text" id="location" required>
+            <label for="observationTime">Observation Time:</label>
+            <input type="time" id="observationTime" required>
+            <button type="button" onclick="recordObservation()">Record Observation</button>
+            <button type="button" onclick="resetEntry()">Reset Entry</button>
+            <button type="button" onclick="resetAll()">Reset All</button>
+        </form>
+
+        <label for="filterSpecies">Filter by Species:</label>
+        <select id="filterSpecies" onchange="filterObservations()">
+            <option value="">All Species</option>
+        </select>
+
+        <table id="observationTable">
+            <tr>
+                <th>Species</th>
+                <th>Location</th>
+                <th>Observation Time</th>
+                <th>Date Recorded</th>
+            </tr>
+        </table>
+
+        <p>Total Observations: <span id="totalObservations">0</span></p>
+    </div>
+
+    <script>
+        class BiodiversityTracker {
+            constructor() {
+                this.observations = [];
+            }
+
+            recordObservation(species, location, observationTime) {
+                const dateRecorded = new Date().toLocaleDateString();
+                this.observations.push({ species, location, observationTime, dateRecorded });
+                updateTable();
+                updateTotalObservations();
+                updateSpeciesFilter();
+                resetForm();
+            }
+
+            getUniqueSpecies() {
+                const speciesSet = new Set();
+                this.observations.forEach(observation => speciesSet.add(observation.species));
+                return Array.from(speciesSet);
+            }
+
+            resetAll() {
+                this.observations = [];
+                updateTable();
+                updateTotalObservations();
+                updateSpeciesFilter();
+                resetForm();
+            }
+        }
+
+        const tracker = new BiodiversityTracker();
+        function recordObservation() {
+            const species = document.getElementById('species').value;
+            const location = document.getElementById('location').value;
+            const observationTime = document.getElementById('observationTime').value;
+
+            if (species.trim() !== '' && location.trim() !== '' && observationTime.trim() !== '') {
+                tracker.recordObservation(species, location, observationTime);
+            } else {
+                alert("Please enter valid values for species, location, and observation time.");
+            }
+        }
+
+        function updateTable() {
+            const observationTable = document.getElementById('observationTable');
+            while (observationTable.rows.length > 1) {
+                observationTable.deleteRow(1);
+            }
+
+            for (const observationData of tracker.observations) {
+                const row = observationTable.insertRow(-1);
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+                const cell4 = row.insertCell(3);
+                cell1.textContent = observationData.species;
+                cell2.textContent = observationData.location;
+                cell3.textContent = observationData.observationTime;
+                cell4.textContent = observationData.dateRecorded;
+            }
+        }
+
+        function updateTotalObservations() {
+            const totalObservationsSpan = document.getElementById('totalObservations');
+            totalObservationsSpan.textContent = tracker.observations.length;
+        }
+
+        function updateSpeciesFilter() {
+            const filterSpeciesSelect = document.getElementById('filterSpecies');
+            filterSpeciesSelect.innerHTML = '<option value="">All Species</option>';
+            const uniqueSpecies = tracker.getUniqueSpecies();
+            for (const species of uniqueSpecies) {
+                const option = document.createElement('option');
+                option.value = species;
+                option.textContent = species;
+                filterSpeciesSelect.appendChild(option);
+            }
+        }
+
+        function filterObservations() {
+            const filterSpecies = document.getElementById('filterSpecies').value;
+            const filteredObservations = filterSpecies
+                ? tracker.observations.filter(observation => observation.species === filterSpecies)
+                : tracker.observations;
+            updateFilteredTable(filteredObservations);
+        }
+
+        function updateFilteredTable(filteredObservations) {
+            const observationTable = document.getElementById('observationTable');
+            
+            while (observationTable.rows.length > 1) {
+                observationTable.deleteRow(1);
+            }
+            for (const observationData of filteredObservations) {
+                const row = observationTable.insertRow(-1);
+                const cell1 = row.insertCell(0);
+                const cell2 = row.insertCell(1);
+                const cell3 = row.insertCell(2);
+                const cell4 = row.insertCell(3);
+                cell1.textContent = observationData.species;
+                cell2.textContent = observationData.location;
+                cell3.textContent = observationData.observationTime;
+                cell4.textContent = observationData.dateRecorded;
+            }
+        }
+
+        function resetForm() {
+            document.getElementById('species').value = '';
+            document.getElementById('location').value = '';
+            document.getElementById('observationTime').value = '';
+        }
+
+        function resetEntry() {
+            if (tracker.observations.length > 0) {
+                tracker.observations.pop();
+                updateTable();
+                updateTotalObservations();
+                updateSpeciesFilter();
+            }
+        }
+        function resetAll() {
+            tracker.resetAll();
+        }
+    </script>
+
+</body>
+</html>
